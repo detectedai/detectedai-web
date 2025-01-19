@@ -40,36 +40,31 @@ def init_config():
 # Create config when application starts
 init_config()
 
-# SSL'i zorunlu kıl
-@app.before_request
-def before_request():
-    if not request.is_secure:
-        url = request.url.replace('http://', 'https://', 1)
-        return redirect(url, code=301)
+)
 
-# Tüm sayfalara erişim kontrolü için yeni before_request fonksiyonu
+
 @app.before_request
 def check_auth():
-    # Debug için log ekleyelim
+    # for debug
     print(f"Accessing endpoint: {request.endpoint}")
     print(f"Session auth status: {session.get('authenticated')}")
     print(f"Browser session status: {check_browser_session()}")
 
-    # Login sayfasına ve static dosyalara her zaman erişime izin ver
+  
     if request.endpoint == 'login' or request.endpoint == 'static':
         return None
     
-    # URL yoluyla direkt erişimi engelle
+    
     if request.endpoint is None:
         return redirect('/login')
         
-    # Diğer tüm sayfalar için kesin authentication kontrolü
+    # authentication control
     if not session.get('authenticated', False):
-        # Browser session'ı da kontrol et
+        # Browser session control
         if not check_browser_session():
             return redirect('/login')
         else:
-            # Geçerli browser session varsa session'ı güncelle
+            
             session['authenticated'] = True
 
 # Initialize the face detection classifier
@@ -100,21 +95,21 @@ def save_browser_session(code):
             
         sessions_file = 'config/browser_sessions.json'
         
-        # Sessions dosyasını oku
+        
         if os.path.exists(sessions_file):
             with open(sessions_file, 'r') as f:
                 sessions = json.load(f)
         else:
             sessions = {}
         
-        # Browser bilgisini kaydet
+        
         sessions[fingerprint] = {
             "code": code,
             "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "user_agent": request.headers.get('User-Agent', '')
         }
         
-        # Dosyaya kaydet
+       
         with open(sessions_file, 'w') as f:
             json.dump(sessions, f, indent=4)
             
@@ -274,7 +269,7 @@ def check_reference_code(code):
                 return True
         return False
     except Exception as e:
-        print(f"Kod kontrol hatası: {e}")
+        print(f"Code error: {e}")
         return False
 
 @app.route('/login', methods=['GET', 'POST'])

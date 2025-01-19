@@ -243,7 +243,7 @@ def generate_frames_face_only():
                 cv2.putText(frame, f'Distance: {distance}cm', (x, y-10), 
                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             
-            # Frame'i JPEG formatına çevir
+            
             ret, buffer = cv2.imencode('.jpg', frame)
             frame = buffer.tobytes()
             

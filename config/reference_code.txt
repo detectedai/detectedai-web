@@ -3,7 +3,7 @@
         "max_uses": 10,
         "current_uses": 0
     },
-    "YENI_KOD_123": {
+    "NEWCODE": {
         "max_uses": 5,
         "current_uses": 0
     }

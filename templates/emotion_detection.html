@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emotion Detection</title>
+    <script src="https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/dist/face-api.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #000000;
+            padding: 20px 0;
+        }
+
+        .sidebar-item {
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-item:hover {
+            background-color: #333;
+        }
+
+        .sidebar-item.active {
+            background-color: #00bcd4;
+        }
+
+        .content {
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .video-container {
+            border: 2px solid #00bcd4;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            background-color: #000;
+            width: 100%;
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        #emotion-display {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            padding: 8px 15px;
+            background-color: rgba(0, 188, 212, 0.9);
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: transparent;
+            border: 1px solid #00bcd4;
+            color: #00bcd4;
+            text-align: center;
+        }
+
+        .error {
+            color: #ff4444;
+            border: 1px solid #ff4444;
+        }
+
+        .success {
+            color: #00bcd4;
+            border: 1px solid #00bcd4;
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <a href="/" class="sidebar-item">🏠 Home</a>
+            <a href="/face-detection" class="sidebar-item">👤 Face Detection</a>
+            <a href="/body-detection" class="sidebar-item">🚶 Body Detection</a>
+            <a href="/eye-detection" class="sidebar-item">👁️ Eye Detection</a>
+            <a href="/emotion-detection" class="sidebar-item active">😊 Emotion Detection</a>
+            <a href="/about" class="sidebar-item">ℹ️ About Us</a>
+        </div>
+
+        <div class="content">
+            <div class="header">
+                <h1>Emotion Detection</h1>
+                <p>Real-time emotion detection using facial expressions</p>
+            </div>
+
+            <div class="container">
+                <div class="video-container">
+                    <div id="emotion-display">Detecting emotion...</div>
+                    <video id="video" width="1920" height="1080" autoplay muted playsinline></video>
+                </div>
+                <div id="status">Camera started successfully</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const status = document.getElementById('status');
+        const emotionDisplay = document.getElementById('emotion-display');
+
+        function updateStatus(message, isError = false) {
+            status.textContent = message;
+            status.className = isError ? 'error' : 'success';
+            console.log(message);
+        }
+
+        function updateEmotionDisplay(emotions) {
+            if (!emotions) {
+                emotionDisplay.textContent = 'No face detected';
+                return;
+            }
+
+            // Find the emotion with highest probability
+            const maxEmotion = Object.entries(emotions).reduce((a, b) => a[1] > b[1] ? a : b);
+            const emotionEmojis = {
+                neutral: '😐',
+                happy: '😊',
+                sad: '😢',
+                angry: '😠',
+                fearful: '😨',
+                disgusted: '🤢',
+                surprised: '😲'
+            };
+
+            const emoji = emotionEmojis[maxEmotion[0]] || '';
+            emotionDisplay.textContent = `${emoji} ${maxEmotion[0].charAt(0).toUpperCase() + maxEmotion[0].slice(1)}`;
+        }
+
+        async function loadModels() {
+            try {
+                updateStatus('Loading models...');
+                await faceapi.nets.tinyFaceDetector.loadFromUri('/static/models');
+                await faceapi.nets.faceLandmark68Net.loadFromUri('/static/models');
+                await faceapi.nets.faceExpressionNet.loadFromUri('/static/models');
+                
+                return true;
+            } catch (error) {
+                console.error('Model loading error:', error);
+                updateStatus('Model loading error: ' + error.message, true);
+                return false;
+            }
+        }
+
+        async function startVideo() {
+            try {
+                updateStatus('Starting camera...');
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        facingMode: 'user',
+                        frameRate: { ideal: 30 },
+                        aspectRatio: 16/9
+                    }
+                });
+                video.srcObject = stream;
+                updateStatus('Camera started successfully');
+                return true;
+            } catch (err) {
+                updateStatus('Camera access error: ' + err.message, true);
+                console.error('Camera error:', err);
+                return false;
+            }
+        }
+
+        async function init() {
+            try {
+                updateStatus('Initializing Face API...');
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (typeof faceapi === 'undefined') {
+                    throw new Error('Face API failed to load!');
+                }
+
+                const modelsLoaded = await loadModels();
+                if (!modelsLoaded) {
+                    throw new Error('Failed to load models!');
+                }
+                updateStatus('Models loaded successfully');
+
+                const videoStarted = await startVideo();
+                if (!videoStarted) {
+                    throw new Error('Failed to start camera!');
+                }
+
+                video.addEventListener('play', () => {
+                    const canvas = faceapi.createCanvasFromMedia(video);
+                    document.querySelector('.video-container').appendChild(canvas);
+                    
+                    // Set canvas to same size and position as video
+                    canvas.style.position = 'absolute';
+                    canvas.style.top = '0';
+                    canvas.style.left = '0';
+                    canvas.style.width = '100%';
+                    canvas.style.height = '100%';
+                    
+                    const displaySize = {
+                        width: video.videoWidth,
+                        height: video.videoHeight
+                    };
+                    
+                    // Match canvas dimensions with video
+                    faceapi.matchDimensions(canvas, displaySize);
+
+                    setInterval(async () => {
+                        try {
+                            const detections = await faceapi.detectAllFaces(
+                                video,
+                                new faceapi.TinyFaceDetectorOptions()
+                            ).withFaceLandmarks().withFaceExpressions();
+
+                            // Video boyutlarına göre yeniden ölçeklendir
+                            const resizedDetections = faceapi.resizeResults(detections, {
+                                width: video.videoWidth,
+                                height: video.videoHeight
+                            });
+                            
+                            // Canvas'ı temizle
+                            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+
+                            if (resizedDetections.length === 0) {
+                                updateEmotionDisplay(null);
+                            } else {
+                                updateEmotionDisplay(resizedDetections[0].expressions);
+                                
+                                // Yüz çerçevesini ve landmarkları çiz
+                                faceapi.draw.drawDetections(canvas, resizedDetections);
+                                faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+                            }
+                        } catch (err) {
+                            console.error('Detection error:', err);
+                        }
+                    }, 100);
+                });
+
+            } catch (err) {
+                updateStatus('Error: ' + err.message, true);
+                console.error('General error:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html> 

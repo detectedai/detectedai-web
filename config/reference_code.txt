@@ -1,0 +1,10 @@
+{
+    "123456789": {
+        "max_uses": 10,
+        "current_uses": 0
+    },
+    "YENI_KOD_123": {
+        "max_uses": 5,
+        "current_uses": 0
+    }
+}

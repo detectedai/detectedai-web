@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Eye Detection</title>
+    <script src="https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/dist/face-api.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #000000;
+            padding: 20px 0;
+        }
+
+        .sidebar-item {
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-item:hover {
+            background-color: #333;
+        }
+
+        .sidebar-item.active {
+            background-color: #00bcd4;
+        }
+
+        .content {
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .video-container {
+            border: 2px solid #00bcd4;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            background-color: #000;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.3);
+        }
+
+        #eye-status {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            padding: 8px 15px;
+            background-color: rgba(0, 188, 212, 0.9);
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: transparent;
+            border: 1px solid #00bcd4;
+            color: #00bcd4;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <a href="/" class="sidebar-item">🏠 Home</a>
+            <a href="/face-detection" class="sidebar-item">👤 Face Detection</a>
+            <a href="/body-detection" class="sidebar-item">🚶 Body Detection</a>
+            <a href="/eye-detection" class="sidebar-item active">👁️ Eye Detection</a>
+            <a href="/emotion-detection" class="sidebar-item">😊 Emotion Detection</a>
+            <a href="/about" class="sidebar-item">ℹ️ About Us</a>
+        </div>
+
+        <div class="content">
+            <div class="header">
+                <h1>Eye Detection</h1>
+                <p>Real-time eye tracking and detection</p>
+            </div>
+
+            <div class="container">
+                <div class="video-container">
+                    <div id="eye-status">Eye detected..</div>
+                    <video id="video" width="640" height="480" autoplay muted playsinline></video>
+                    <canvas id="overlay"></canvas>
+                </div>
+                <div id="status">Camera starging...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const overlay = document.getElementById('overlay');
+        const status = document.getElementById('status');
+        const eyeStatus = document.getElementById('eye-status');
+
+        function updateStatus(message, isError = false) {
+            status.textContent = message;
+            status.style.color = isError ? '#ff4444' : '#00bcd4';
+            console.log(message);
+        }
+
+        async function loadModels() {
+            try {
+                updateStatus('Models are loading...');
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri('/static/models'),
+                    faceapi.nets.faceLandmark68Net.loadFromUri('/static/models')
+                ]);
+                updateStatus('Models loaded successfully');
+                return true;
+            } catch (error) {
+                updateStatus('Model access error: ' + error.message, true);
+                return false;
+            }
+        }
+
+        function drawEyes(landmarks, ctx) {
+            // Sol göz noktaları
+            const leftEye = landmarks.getLeftEye();
+            // Sağ göz noktaları
+            const rightEye = landmarks.getRightEye();
+
+            // Gözleri çiz
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#00bcd4';
+            ctx.fillStyle = 'rgba(0, 188, 212, 0.2)';
+
+            // Sol göz
+            ctx.moveTo(leftEye[0].x, leftEye[0].y);
+            leftEye.forEach(point => {
+                ctx.lineTo(point.x, point.y);
+            });
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+
+            // Sağ göz
+            ctx.beginPath();
+            ctx.moveTo(rightEye[0].x, rightEye[0].y);
+            rightEye.forEach(point => {
+                ctx.lineTo(point.x, point.y);
+            });
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+
+            // Göz merkezlerini işaretle
+            const leftEyeCenter = {
+                x: leftEye.reduce((sum, point) => sum + point.x, 0) / leftEye.length,
+                y: leftEye.reduce((sum, point) => sum + point.y, 0) / leftEye.length
+            };
+            const rightEyeCenter = {
+                x: rightEye.reduce((sum, point) => sum + point.x, 0) / rightEye.length,
+                y: rightEye.reduce((sum, point) => sum + point.y, 0) / rightEye.length
+            };
+
+            // Göz merkezlerini çiz
+            ctx.beginPath();
+            ctx.fillStyle = '#00bcd4';
+            ctx.arc(leftEyeCenter.x, leftEyeCenter.y, 3, 0, 2 * Math.PI);
+            ctx.arc(rightEyeCenter.x, rightEyeCenter.y, 3, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        async function startVideo() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 640,
+                        height: 480
+                    }
+                });
+                video.srcObject = stream;
+                updateStatus('Camera started successfully');
+            } catch (err) {
+                updateStatus('Camera access error: ' + err.message, true);
+            }
+        }
+
+        video.addEventListener('play', () => {
+            overlay.width = video.width;
+            overlay.height = video.height;
+            overlay.style.position = 'absolute';
+            overlay.style.top = '20px';
+            overlay.style.left = '20px';
+
+            setInterval(async () => {
+                const detections = await faceapi.detectAllFaces(
+                    video,
+                    new faceapi.TinyFaceDetectorOptions()
+                ).withFaceLandmarks();
+
+                const ctx = overlay.getContext('2d');
+                ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+                if (detections.length > 0) {
+                    detections.forEach(detection => {
+                        const landmarks = detection.landmarks;
+                        drawEyes(landmarks, ctx);
+                        eyeStatus.textContent = 'Eyes Detected!';
+                        eyeStatus.style.backgroundColor = 'rgba(0, 188, 212, 0.9)';
+                    });
+                } else {
+                    eyeStatus.textContent = 'Eye detected...';
+                    eyeStatus.style.backgroundColor = 'rgba(102, 102, 102, 0.9)';
+                }
+            }, 100);
+        });
+
+        async function init() {
+            try {
+                if (typeof faceapi === 'undefined') {
+                    throw new Error('Failed to load face API!');
+                }
+                await loadModels();
+                await startVideo();
+            } catch (err) {
+                updateStatus('Error: ' + err.message, true);
+                console.error('Error:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html> 

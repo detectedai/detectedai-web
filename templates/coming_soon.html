@@ -1,0 +1,23 @@
+{% extends "index.html" %}
+
+{% block page_title %}{{ page_name }} - DetectedAI{% endblock %}
+
+{% block content %}
+<div class="coming-soon-container">
+    <div class="coming-soon-content">
+        <i class="{{ icon_class }} coming-soon-icon"></i>
+        <h1>{{ page_name }}</h1>
+        <div class="coming-soon-badge">Coming Soon</div>
+        <p class="lead">We're working hard to bring you amazing {{ feature_name }} capabilities.</p>
+        <div class="features-preview">
+            <h3>What to expect:</h3>
+            <ul>
+                {% for feature in features %}
+                <li><i class="fas fa-check"></i> {{ feature }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <a href="/" class="btn btn-primary mt-4">Back to Home</a>
+    </div>
+</div>
+{% endblock %} 

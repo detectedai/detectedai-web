@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DetectedAI - Login</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url('/static/login.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transform-origin: center;
+            transform: scale(1);
+            min-width: 100vw;
+            min-height: 100vh;
+        }
+
+        .form-group {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -10%);
+            width: 400px;
+            text-align: center;
+        }
+
+        input[type="password"] {
+            width: 400px;
+            height: 45px;
+            padding: 0 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            text-align: center;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        input[type="password"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .login-button {
+            width: 400px;
+            height: 45px;
+            background: rgba(138, 153, 192, 0.2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .login-button:hover {
+            background: rgba(138, 153, 192, 0.3);
+        }
+
+        .login-button::after {
+            content: '→';
+            font-size: 18px;
+        }
+
+        .error {
+            position: fixed;
+            top: calc(50% + 100px);
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff4444;
+            text-align: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-height: 600px) {
+            .login-title {
+                top: 10%;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .form-group, .login-button {
+                max-width: 90%;
+            }
+        }
+
+        /* For zoom control */
+        @media screen and (min-width: 320px) {
+            html {
+                zoom: reset;
+                -webkit-text-size-adjust: none;
+            }
+        }
+
+        /* Let's adjust the position of the eyes */
+        .eyes-container {
+            position: absolute;
+            top: 32%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="eyes-container">
+            <svg class="eye eye-left" viewBox="0 0 100 50">
+                <path d="M10,25 Q50,0 90,25 Q50,50 10,25" fill="none" stroke="#ff4444" stroke-width="3"/>
+                <circle cx="50" cy="25" r="10" fill="#ff4444"/>
+            </svg>
+            <svg class="eye eye-right" viewBox="0 0 100 50">
+                <path d="M10,25 Q50,0 90,25 Q50,50 10,25" fill="none" stroke="#4444ff" stroke-width="3"/>
+                <circle cx="50" cy="25" r="10" fill="#4444ff"/>
+            </svg>
+        </div>
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <input type="password" name="reference_code" placeholder="ENTER YOUR REFERENCE CODE HERE" required>
+                <button type="submit" class="login-button">LOGIN</button>
+            </div>
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if session.get('authenticated') %}
+    <script>
+        localStorage.setItem('hasAccess', 'true');
+        window.location.href = "/";
+    </script>
+    {% endif %}
+
+    <script>
+        // JavaScript for zoom control
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reset zoom level
+            document.body.style.zoom = "100%";
+            
+            // Prevent zooming
+            document.addEventListener('wheel', function(e) {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Prevent keyboard zoom
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && (e.key === '+' || e.key === '-')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

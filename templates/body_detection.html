@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Body Detection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #000000;
+            padding: 20px 0;
+        }
+
+        .sidebar-item {
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-item:hover {
+            background-color: #333;
+        }
+
+        .sidebar-item.active {
+            background-color: #00bcd4;
+        }
+
+        .content {
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .video-container {
+            border: 2px solid #00bcd4;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            background-color: #000;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.3);
+        }
+
+        #pose-info {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            padding: 8px 15px;
+            background-color: rgba(0, 188, 212, 0.9);
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: transparent;
+            border: 1px solid #00bcd4;
+            color: #00bcd4;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar">
+            <a href="/" class="sidebar-item">🏠 Home</a>
+            <a href="/face-detection" class="sidebar-item">👤 Face Detection</a>
+            <a href="/body-detection" class="sidebar-item active">🚶 Body Detection</a>
+            <a href="/eye-detection" class="sidebar-item">👁️ Eye Detection</a>
+            <a href="/emotion-detection" class="sidebar-item">😊 Emotion Detection</a>
+            <a href="/about" class="sidebar-item">ℹ️ About Us</a>
+        </div>
+
+        <div class="content">
+            <div class="header">
+                <h1>Body Detection</h1>
+                <p>Real-time body pose detection and tracking</p>
+            </div>
+
+            <div class="container">
+                <div class="video-container">
+                    <div id="pose-info">Body detected...</div>
+                    <video id="video" width="640" height="480" autoplay muted playsinline></video>
+                    <canvas id="canvas"></canvas>
+                </div>
+                <div id="status">Camera starting...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const status = document.getElementById('status');
+        const poseInfo = document.getElementById('pose-info');
+        let net;
+
+        function updateStatus(message, isError = false) {
+            status.textContent = message;
+            status.style.color = isError ? '#ff4444' : '#00bcd4';
+            console.log(message);
+        }
+
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 640,
+                        height: 480
+                    }
+                });
+                video.srcObject = stream;
+                
+                return new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        resolve(video);
+                    };
+                });
+            } catch (err) {
+                updateStatus('Kamera access error: ' + err.message, true);
+                throw err;
+            }
+        }
+
+        async function loadPoseNet() {
+            try {
+                updateStatus('PoseNet loading...');
+                net = await posenet.load({
+                    architecture: 'MobileNetV1',
+                    outputStride: 16,
+                    inputResolution: { width: 640, height: 480 },
+                    multiplier: 0.75
+                });
+                updateStatus('PoseNet successfully uploaded');
+                return net;
+            } catch (err) {
+                updateStatus('PoseNet loading error: ' + err.message, true);
+                throw err;
+            }
+        }
+
+        function drawKeypoints(keypoints, minConfidence = 0.3) {
+            const ctx = canvas.getContext('2d');
+            for (let i = 0; i < keypoints.length; i++) {
+                const keypoint = keypoints[i];
+                if (keypoint.score >= minConfidence) {
+                    ctx.beginPath();
+                    ctx.arc(keypoint.position.x, keypoint.position.y, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#00bcd4';
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawSkeleton(keypoints, minConfidence = 0.3) {
+            const ctx = canvas.getContext('2d');
+            const adjacentKeyPoints = posenet.getAdjacentKeyPoints(keypoints, minConfidence);
+
+            adjacentKeyPoints.forEach((keypoints) => {
+                ctx.beginPath();
+                ctx.moveTo(keypoints[0].position.x, keypoints[0].position.y);
+                ctx.lineTo(keypoints[1].position.x, keypoints[1].position.y);
+                ctx.strokeStyle = '#00bcd4';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        async function detectPose() {
+            const pose = await net.estimateSinglePose(video, {
+                flipHorizontal: false
+            });
+
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (pose.score > 0.3) {
+                drawKeypoints(pose.keypoints);
+                drawSkeleton(pose.keypoints);
+                poseInfo.textContent = `Sense: ${Math.round(pose.score * 100)}%`;
+            } else {
+                poseInfo.textContent = 'Body Detected...';
+            }
+
+            requestAnimationFrame(detectPose);
+        }
+
+        async function init() {
+            try {
+                canvas.width = 640;
+                canvas.height = 480;
+                canvas.style.position = 'absolute';
+                canvas.style.top = '20px';
+                canvas.style.left = '20px';
+
+                await setupCamera();
+                await loadPoseNet();
+                detectPose();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Started on page load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html> 

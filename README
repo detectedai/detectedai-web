@@ -1,10 +1,10 @@
-![image](https://github.com/detectedai/detectedai/blob/main/static/images/screen.png)
 
 
-🎯 Project Overview
+
+# 🎯 Project Overview
 This project aims to detect faces, recognize emotions, and identify body positions from images or videos. Leveraging advanced computer vision and deep learning techniques, the system can analyze and interpret human expressions and body language in real-time or from pre-recorded media.
 
-📋 Features
+# 📋 Features
 Face Detection:
 Accurately detects human faces in images or videos.
 Supports multiple faces in a single frame.
@@ -31,7 +31,7 @@ Optimized for webcam and video input.
 /outputs: Processed results, including annotated images and analysis logs.
 
 
-📋 Requirements
+# 📋 Requirements
 To run this project, ensure the following dependencies are installed:
 
 Python 3.11.8
@@ -57,8 +57,6 @@ Emotion labels with confidence scores.
 Body key points annotated on the image.
 
 
-🤝 Contribute
-We welcome contributions! If you'd like to add features, fix bugs, or improve documentation, feel free to fork the repository and submit a pull request.
 
 📬 Contact
 For questions or issues, please open a GitHub issue or contact the maintainers.

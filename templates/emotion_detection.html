@@ -267,13 +267,13 @@
                                 new faceapi.TinyFaceDetectorOptions()
                             ).withFaceLandmarks().withFaceExpressions();
 
-                            // Video boyutlarına göre yeniden ölçeklendir
+                           
                             const resizedDetections = faceapi.resizeResults(detections, {
                                 width: video.videoWidth,
                                 height: video.videoHeight
                             });
                             
-                            // Canvas'ı temizle
+                         
                             canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 
                             if (resizedDetections.length === 0) {
@@ -281,7 +281,7 @@
                             } else {
                                 updateEmotionDisplay(resizedDetections[0].expressions);
                                 
-                                // Yüz çerçevesini ve landmarkları çiz
+                              
                                 faceapi.draw.drawDetections(canvas, resizedDetections);
                                 faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
                             }

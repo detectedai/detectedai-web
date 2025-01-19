@@ -153,18 +153,18 @@
         }
 
         function drawEyes(landmarks, ctx) {
-            // Sol göz noktaları
+            
             const leftEye = landmarks.getLeftEye();
-            // Sağ göz noktaları
+            
             const rightEye = landmarks.getRightEye();
 
-            // Gözleri çiz
+            
             ctx.beginPath();
             ctx.lineWidth = 2;
             ctx.strokeStyle = '#00bcd4';
             ctx.fillStyle = 'rgba(0, 188, 212, 0.2)';
 
-            // Sol göz
+            
             ctx.moveTo(leftEye[0].x, leftEye[0].y);
             leftEye.forEach(point => {
                 ctx.lineTo(point.x, point.y);
@@ -173,7 +173,7 @@
             ctx.stroke();
             ctx.fill();
 
-            // Sağ göz
+           
             ctx.beginPath();
             ctx.moveTo(rightEye[0].x, rightEye[0].y);
             rightEye.forEach(point => {
@@ -183,7 +183,7 @@
             ctx.stroke();
             ctx.fill();
 
-            // Göz merkezlerini işaretle
+           
             const leftEyeCenter = {
                 x: leftEye.reduce((sum, point) => sum + point.x, 0) / leftEye.length,
                 y: leftEye.reduce((sum, point) => sum + point.y, 0) / leftEye.length
@@ -193,7 +193,7 @@
                 y: rightEye.reduce((sum, point) => sum + point.y, 0) / rightEye.length
             };
 
-            // Göz merkezlerini çiz
+            
             ctx.beginPath();
             ctx.fillStyle = '#00bcd4';
             ctx.arc(leftEyeCenter.x, leftEyeCenter.y, 3, 0, 2 * Math.PI);

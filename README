@@ -24,6 +24,7 @@ Real-Time Processing:
 
 Processes live video streams for real-time analysis.
 Optimized for webcam and video input.
+
 📂 Project Structure
 /models: Pretrained deep learning models for face, emotion, and body detection.
 /data: Sample images and videos for testing.

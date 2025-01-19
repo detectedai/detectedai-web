@@ -38,7 +38,7 @@ Python 3.11.8
 
 pip install -r requirements.txt
 
-git clone https://github.com/your-repo/face-emotion-body-detection.git
+git clone https://github.com/detectedai/detectedai.git
 cd face-emotion-body-detection
 
 python src/demo.py --input path_to_image_or_video

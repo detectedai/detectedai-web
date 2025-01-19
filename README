@@ -1,10 +1,10 @@
 
 
 
-# 🎯 Project Overview
+ 🎯 Project Overview
 This project aims to detect faces, recognize emotions, and identify body positions from images or videos. Leveraging advanced computer vision and deep learning techniques, the system can analyze and interpret human expressions and body language in real-time or from pre-recorded media.
 
-# 📋 Features
+ 📋 Features
 Face Detection:
 Accurately detects human faces in images or videos.
 Supports multiple faces in a single frame.
